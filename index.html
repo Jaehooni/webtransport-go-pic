@@ -1,21 +1,62 @@
+<!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <script src="index.js"></script>
-  </head>
-  <body>
-    <div>
-      <section class="hero is-primary">
-        <div class="hero-body">
-          <p class="title">
-            WebTransport Video
-          </p>
-        </div>
-      </section>
-      <div class="columns">
-        <video width="1280" width="720" id="player" controls></video>
-    </div>
-    <button id="send">Recieve</button>
-  </body>
+<head>
+    <title>Image Receiver</title>
+</head>
+<body>
+    <button id="sendButton">Send</button>
+    <img id="imageDisplay" />
+    <script>
+        document.getElementById('sendButton').addEventListener('click', async function() {
+            const transport = new WebTransport('https://localhost:4433/webtransport');
+            await transport.ready;
+
+            const stream = await transport.createBidirectionalStream();
+            const writer = stream.writable.getWriter();
+            writer.write(new Uint8Array([0])); // 서버에 스트림 요청을 보냄
+            writer.close();
+
+            const reader = stream.readable.getReader();
+            let chunks = [];
+            const separator = [0, 255, 0, 255];  // 더 명확한 구분자
+            let matchCount = 0;
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) {
+                    if (chunks.length > 0) {
+                        processChunks(chunks);
+                    }
+                    break;
+                }
+                for (let i = 0; i < value.length; i++) {
+                    if (value[i] === separator[matchCount]) {
+                        matchCount++;
+                        if (matchCount === separator.length) {
+                            processChunks(chunks);
+                            chunks = [];
+                            matchCount = 0;
+                        }
+                    } else {
+                        if (matchCount > 0) {
+                            chunks.push(...separator.slice(0, matchCount));
+                            matchCount = 0;
+                        }
+                        chunks.push(value[i]);
+                    }
+                }
+            }
+        });
+
+        function processChunks(chunks) {
+            if (chunks.length > 0) {
+                const blob = new Blob([new Uint8Array(chunks)], { type: 'image/jpeg' });
+                const img = document.getElementById('imageDisplay');
+                img.src = URL.createObjectURL(blob);
+            }
+        }
+    </script>
+</body>
 </html>
+
 

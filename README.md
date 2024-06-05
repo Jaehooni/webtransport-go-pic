@@ -1,4 +1,4 @@
-# webtransport-go-chat
+# webtransport-go-pic
 
 ## Requirements
 
@@ -7,7 +7,7 @@
 ## Usage
 - clone this repo
 ```
-git clone https://github.com/jaehooni/webtransport-go-video.git
+git clone https://github.com/jaehooni/webtransport-go-pic.git
 ```
 - Follow the installation instructions of [mkcert](https://github.com/FiloSottile/mkcert)
 - create `localhost.pem` and `localhost-key.pem`
